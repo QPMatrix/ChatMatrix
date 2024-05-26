@@ -8,19 +8,61 @@ import {
   Image,
   TextInput,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { defaultStyles } from "@/constants/Styles";
 import Colors from "@/constants/Colors";
+import { useSignIn, useSignUp } from "@clerk/clerk-expo";
 
 const Page = () => {
   const { type } = useLocalSearchParams<{ type: string }>();
+  const { signUp, isLoaded, setActive } = useSignUp();
+  const {
+    signIn,
+    isLoaded: signInLoaded,
+    setActive: setSignInActive,
+  } = useSignIn();
   const [loading, setLoading] = useState(false);
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
-  const onSignUpPress = async () => {};
-  const onSignInPress = async () => {};
+  const onSignUpPress = async () => {
+    if (!signUp) return;
+    setLoading(true);
+    try {
+      const result = await signUp.create({
+        emailAddress,
+        password,
+      });
+      setActive({
+        session: result.createdSessionId,
+      });
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Error", error.errors[0].message);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const onSignInPress = async () => {
+    if (!signIn) return;
+    setLoading(true);
+    try {
+      const result = await signIn.create({
+        identifier: emailAddress,
+        password,
+      });
+      setSignInActive({
+        session: result.createdSessionId,
+      });
+    } catch (error: any) {
+      console.error(error);
+      Alert.alert("Error", error.errors[0].message);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
