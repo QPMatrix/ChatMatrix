@@ -11,10 +11,13 @@ import { defaultStyles } from "@/constants/Styles";
 import { Stack } from "expo-router";
 import HeaderDropDown from "@/components/header-drop-down";
 import MessageInput from "@/components/message-input";
+import MessagesIdea from "@/components/messages-idea";
+import { Message } from "@/utils/interfaces";
 
 const Page = () => {
   const { signOut } = useAuth();
   const [gptVersion, setGptVersion] = React.useState("3.5");
+  const [messages, setMessages] = React.useState<Message[]>([]);
   const getCompletion = async (message: string) => {
     console.log("Message:", message);
   };
@@ -44,7 +47,6 @@ const Page = () => {
         }}
       />
       <View style={{ flex: 1 }}>
-        <Text>Dummy Content</Text>
         <Button title="Sign Out" onPress={() => signOut()} />
       </View>
       <KeyboardAvoidingView
@@ -57,6 +59,8 @@ const Page = () => {
         }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
+        {messages.length === 0 && <MessagesIdea onSelectCard={getCompletion} />}
+
         <MessageInput onShouldSend={getCompletion} />
       </KeyboardAvoidingView>
     </View>
