@@ -1,14 +1,25 @@
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, ActivityIndicator } from "react-native";
 import React from "react";
 import { Message, Role } from "@/utils/interfaces";
+import Colors from "@/constants/Colors";
 
-const ChatMessages = ({ content, role, imageUrl, prompt }: Message) => {
+const ChatMessages = ({
+  content,
+  role,
+  imageUrl,
+  prompt,
+  loading,
+}: Message & { loading?: boolean }) => {
   return (
     <View style={styles.row}>
       {role === Role.Bot ? (
         <View style={[styles.item]}>
           <Image
-            source={require("@/assets/images/logo-white.png")}
+            source={
+              imageUrl
+                ? require("@/assets/images/dalle.png")
+                : require("@/assets/images/logo-white.png")
+            }
             style={styles.btnImage}
           />
         </View>
@@ -18,7 +29,19 @@ const ChatMessages = ({ content, role, imageUrl, prompt }: Message) => {
           style={styles.avatar}
         />
       )}
-      <Text style={styles.text}>{content}</Text>
+      {loading ? (
+        <View style={styles.loading}>
+          <ActivityIndicator color={Colors.primary} />
+        </View>
+      ) : (
+        <>
+          {content === "" && imageUrl ? (
+            <Image source={{ uri: imageUrl }} style={styles.previewImage} />
+          ) : (
+            <Text style={styles.text}>{content}</Text>
+          )}
+        </>
+      )}
     </View>
   );
 };
@@ -51,6 +74,16 @@ const styles = StyleSheet.create({
     fontSize: 16,
     flexWrap: "wrap",
     flex: 1,
+  },
+  loading: {
+    justifyContent: "center",
+    height: 26,
+    marginLeft: 14,
+  },
+  previewImage: {
+    width: 240,
+    height: 240,
+    borderRadius: 10,
   },
 });
 export default ChatMessages;
