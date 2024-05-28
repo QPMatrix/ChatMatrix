@@ -1,44 +1,71 @@
 import {
   View,
-  Text,
-  Button,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Image,
 } from "react-native";
-import React from "react";
-import { useAuth } from "@clerk/clerk-expo";
+import React, { useEffect, useMemo, useState } from "react";
 import { defaultStyles } from "@/constants/Styles";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import HeaderDropDown from "@/components/header-drop-down";
 import MessageInput from "@/components/message-input";
 import MessagesIdea from "@/components/messages-idea";
 import { Message, Role } from "@/utils/interfaces";
 import { FlashList } from "@shopify/flash-list";
 import ChatMessages from "@/components/chat-messages";
-const DUMMY_MESSAGES: Message[] = [
-  {
-    content: "Hello how  I can help you today?",
-    role: Role.Bot,
-  },
-  {
-    content: "I need help with my React Native project. Can you help me?",
-    role: Role.User,
-  },
-];
+import { useMMKVString } from "react-native-mmkv";
+import { keyStorage, Storage } from "@/utils/storage";
+import OpenAI from "react-native-openai";
 const Page = () => {
-  const { signOut } = useAuth();
-  const [gptVersion, setGptVersion] = React.useState("3.5");
-  const [messages, setMessages] = React.useState<Message[]>(DUMMY_MESSAGES);
-  const [height, setHeight] = React.useState(0);
-  const getCompletion = async (message: string) => {
-    console.log("Message:", message);
-  };
+  const [gptVersion, setGptVersion] = useMMKVString("gptVersion", Storage);
+  const [height, setHeight] = useState(0);
+  const [key, setKey] = useMMKVString("apikey", keyStorage);
+  const [organization, setOrganization] = useMMKVString("org", keyStorage);
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  if (!key || key === "" || !organization || organization === "") {
+    return <Redirect href={"/(auth)/(modal)/settings"} />;
+  }
   const onLayout = (event: any) => {
     const { height } = event.nativeEvent.layout;
     setHeight(height);
   };
+  const openAI = useMemo(() => new OpenAI({ apiKey: key, organization }), []);
+  const getCompletion = async (message: string) => {
+    if (messages.length === 0) {
+      //TODO:Create chat later store to db,
+    }
+    setMessages([
+      ...messages,
+      { content: message, role: Role.User },
+      { role: Role.Bot, content: "" },
+    ]);
+    openAI.chat.stream({
+      messages: [{ role: "user", content: message }],
+      model: gptVersion === "4" ? "gpt-4" : "gpt-3.5-turbo",
+    });
+  };
+  useEffect(() => {
+    const handleMessage = (payload: any) => {
+      setMessages((messages) => {
+        const newMessage = payload.choices[0]?.delta.content;
+        if (newMessage) {
+          messages[messages.length - 1].content += newMessage;
+          return [...messages];
+        }
+        if (payload.choices[0]?.finishReason) {
+          //Save the Message
+          console.log("Stream Ended");
+        }
+        return messages;
+      });
+    };
+    openAI.chat.addListener("onChatMessageReceived", handleMessage);
+    return () => {
+      openAI.chat.removeListener("onChatMessageReceived");
+    };
+  }, [openAI]);
   return (
     <View style={defaultStyles.pageContainer}>
       <Stack.Screen

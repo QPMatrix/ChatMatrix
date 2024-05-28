@@ -1,4 +1,4 @@
-rootProject.name = 'chatmatrix'
+rootProject.name = 'ChatMatrix'
 
 dependencyResolutionManagement {
   versionCatalogs {

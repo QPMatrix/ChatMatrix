@@ -1,4 +1,4 @@
-package tech.qpmatrix.chatmatrix
+package tech.qpmatirx.chatmatrix
 
 import android.os.Build
 import android.os.Bundle

@@ -1,17 +1,18 @@
 {
   "expo": {
-    "name": "Chat Matrix",
+    "name": "ChatMatrix",
     "slug": "chatmatrix",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/logo-dark.png",
-    "scheme": "myapp",
+    "icon": "./assets/images/icon.png",
+    "scheme": "chatmatrix",
     "userInterfaceStyle": "light",
     "splash": {
       "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "tech.qpmatrix.chatmatrix"
@@ -21,7 +22,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "tech.qpmatrix.chatmatrix"
+      "package": "tech.qpmatirx.chatmatrix"
     },
     "web": {
       "bundler": "metro",

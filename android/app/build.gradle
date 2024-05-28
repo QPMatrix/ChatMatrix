@@ -83,9 +83,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'tech.qpmatrix.chatmatrix'
+    namespace 'tech.qpmatirx.chatmatrix'
     defaultConfig {
-        applicationId 'tech.qpmatrix.chatmatrix'
+        applicationId 'tech.qpmatirx.chatmatrix'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
