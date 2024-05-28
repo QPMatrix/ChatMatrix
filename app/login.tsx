@@ -18,6 +18,7 @@ import { useSignIn, useSignUp } from "@clerk/clerk-expo";
 
 const Page = () => {
   const { type } = useLocalSearchParams<{ type: string }>();
+
   const { signUp, isLoaded, setActive } = useSignUp();
   const {
     signIn,
