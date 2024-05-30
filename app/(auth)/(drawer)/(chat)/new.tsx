@@ -5,7 +5,7 @@ import {
   StyleSheet,
   Image,
 } from "react-native";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { defaultStyles } from "@/constants/Styles";
 import { Redirect, Stack } from "expo-router";
 import HeaderDropDown from "@/components/header-drop-down";
@@ -17,13 +17,21 @@ import ChatMessages from "@/components/chat-messages";
 import { useMMKVString } from "react-native-mmkv";
 import { keyStorage, Storage } from "@/utils/storage";
 import OpenAI from "react-native-openai";
+import { useSQLiteContext } from "expo-sqlite";
+import { addChat, addMessage } from "@/utils/Database";
 const Page = () => {
   const [gptVersion, setGptVersion] = useMMKVString("gptVersion", Storage);
   const [height, setHeight] = useState(0);
   const [key, setKey] = useMMKVString("apikey", keyStorage);
   const [organization, setOrganization] = useMMKVString("org", keyStorage);
   const [messages, setMessages] = useState<Message[]>([]);
-
+  const db = useSQLiteContext();
+  const [chatId, _setChatId] = useState<string>("");
+  const chatIdRef = useRef(chatId);
+  const setChatId = (id: string) => {
+    chatIdRef.current = id;
+    _setChatId(id);
+  };
   if (!key || key === "" || !organization || organization === "") {
     return <Redirect href={"/(auth)/(modal)/settings"} />;
   }
@@ -34,7 +42,10 @@ const Page = () => {
   const openAI = useMemo(() => new OpenAI({ apiKey: key, organization }), []);
   const getCompletion = async (message: string) => {
     if (messages.length === 0) {
-      //TODO:Create chat later store to db,
+      const result = await addChat(db, message);
+      const ChatId = result.lastInsertRowId;
+      setChatId(ChatId.toString());
+      addMessage(db, ChatId, { content: message, role: Role.User });
     }
     setMessages([
       ...messages,
@@ -55,8 +66,10 @@ const Page = () => {
           return [...messages];
         }
         if (payload.choices[0]?.finishReason) {
-          //Save the Message
-          console.log("Stream Ended");
+          addMessage(db, parseInt(chatIdRef.current), {
+            content: messages[messages.length - 1].content,
+            role: Role.Bot,
+          });
         }
         return messages;
       });
