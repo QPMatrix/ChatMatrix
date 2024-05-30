@@ -30,7 +30,6 @@ Additional features:
 <img src="./screenshots/8.png" width=30%>
 <img src="./screenshots/9.png" width=30%>
 <img src="./screenshots/10.png" width=30%>
-<img src="./screenshots/11.png" width=30%>
 <img src="./screenshots/12.png" width=30%>
 <img src="./screenshots/13.png" width=30%>
 <img src="./screenshots/14.png" width=30%>
