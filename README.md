@@ -1,4 +1,4 @@
-# React Native ChatGPT Clone with Clerk & RevenueCat
+# React Native ChatGPT Clone with Clerk
 
 This is a React Native ChatGPT clone using [Clerk](https://go.clerk.com/wvMHe8T) for user authentication
 
