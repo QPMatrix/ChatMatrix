@@ -19,6 +19,7 @@ import { useMMKVString } from "react-native-mmkv";
 import { keyStorage, Storage } from "@/utils/storage";
 import OpenAI from "react-native-openai";
 import Colors from "@/constants/Colors";
+import { useSQLiteContext } from "expo-sqlite";
 
 const Page = () => {
   const [gptVersion, setGptVersion] = useMMKVString("gptVersion", Storage);
@@ -27,6 +28,7 @@ const Page = () => {
   const [organization, setOrganization] = useMMKVString("org", keyStorage);
   const [messages, setMessages] = useState<Message[]>([]);
   const [working, setWorking] = useState(false);
+
   if (!key || key === "" || !organization || organization === "") {
     return <Redirect href={"/(auth)/(modal)/settings"} />;
   }
