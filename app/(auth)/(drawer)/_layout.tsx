@@ -6,20 +6,65 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   TextInput,
+  Keyboard,
+  Alert,
 } from "react-native";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Drawer } from "expo-router/drawer";
-import { Link, useNavigation } from "expo-router";
+import { Link, useNavigation, useRouter } from "expo-router";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import { DrawerActions } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   DrawerContentScrollView,
+  DrawerItem,
   DrawerItemList,
+  useDrawerStatus,
 } from "@react-navigation/drawer";
+import { deleteChat, getChats, renameChat } from "@/utils/Database";
+import { useSQLiteContext } from "expo-sqlite";
+import { Chat } from "@/utils/interfaces";
+import * as ContextMenu from "zeego/context-menu";
 export const CustomDrawerContent = (props: any) => {
   const { bottom, top } = useSafeAreaInsets();
+  const isDrawerOpen = useDrawerStatus() === "open";
+  const [history, setHistory] = useState<Chat[]>([]);
+  const router = useRouter();
+  const db = useSQLiteContext();
+  useEffect(() => {
+    if (isDrawerOpen) {
+      loadChats();
+    }
+    Keyboard.dismiss();
+  }, [isDrawerOpen]);
+  const loadChats = async () => {
+    const result = await getChats(db);
+    setHistory(result);
+  };
+  const onDeleteChat = async (id: number) => {
+    Alert.alert("Delete Chat", "Are you sure you want to delete this chat?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        onPress: async () => {
+          await deleteChat(db, id);
+          loadChats();
+        },
+      },
+    ]);
+  };
+  const onRenameChat = async (id: number) => {
+    Alert.prompt("Rename Chat", "Enter new name", async (newTitle) => {
+      if (newTitle) {
+        await renameChat(db, id, newTitle);
+      }
+      loadChats();
+    });
+  };
   return (
     <View style={{ flex: 1, marginTop: top }}>
       <View style={{ backgroundColor: "#fff", paddingBottom: 16 }}>
@@ -42,6 +87,56 @@ export const CustomDrawerContent = (props: any) => {
         {...props}
       >
         <DrawerItemList {...props} />
+        {history &&
+          history.map((chat) => (
+            <ContextMenu.Root key={chat.id}>
+              <ContextMenu.Trigger>
+                <DrawerItem
+                  label={chat.title}
+                  onPress={() =>
+                    router.push(`/(auth)/(drawer)/(chat)/${chat.id}`)
+                  }
+                  inactiveTintColor="#000"
+                />
+              </ContextMenu.Trigger>
+              <ContextMenu.Content>
+                <ContextMenu.Preview>
+                  {() => (
+                    <View
+                      style={{
+                        padding: 16,
+                        height: 200,
+                        width: 250,
+                        backgroundColor: "#fff",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <Text>{chat.title}</Text>
+                    </View>
+                  )}
+                </ContextMenu.Preview>
+                <ContextMenu.Item
+                  key="rename"
+                  onSelect={() => onRenameChat(chat.id)}
+                >
+                  <ContextMenu.ItemTitle>Rename</ContextMenu.ItemTitle>
+                  <ContextMenu.ItemIcon
+                    ios={{ name: "pencil", pointSize: 18 }}
+                  />
+                </ContextMenu.Item>
+                <ContextMenu.Item
+                  key="delete"
+                  onSelect={() => onDeleteChat(chat.id)}
+                >
+                  <ContextMenu.ItemTitle>Delete</ContextMenu.ItemTitle>
+                  <ContextMenu.ItemIcon
+                    ios={{ name: "trash", pointSize: 18 }}
+                  />
+                </ContextMenu.Item>
+              </ContextMenu.Content>
+            </ContextMenu.Root>
+          ))}
       </DrawerContentScrollView>
       <View style={{ padding: 16, paddingBottom: bottom }}>
         <Link href="/(auth)/(modal)/settings" asChild>
@@ -103,6 +198,26 @@ const Layout = () => {
               />
             </View>
           ),
+          headerRight: () => (
+            <Link href="/(auth)/(drawer)/(chat)/new" push asChild>
+              <TouchableOpacity>
+                <Ionicons
+                  name="create-outline"
+                  size={24}
+                  color={Colors.grey}
+                  style={{ marginRight: 16 }}
+                />
+              </TouchableOpacity>
+            </Link>
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="(chat)/[id]"
+        options={{
+          drawerItemStyle: {
+            display: "none",
+          },
           headerRight: () => (
             <Link href="/(auth)/(drawer)/(chat)/new" push asChild>
               <TouchableOpacity>
